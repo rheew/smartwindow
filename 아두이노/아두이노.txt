@@ -1,0 +1,226 @@
+
+/////////////////////////////////////////
+int trig=2;
+int echo=3;
+int in=0;
+int mag=5;
+int ENA=6;
+int IN1=7;
+int IN2=8;
+int IN3=9;
+int IN4=10;
+int ENB=11;
+int stepPer=200;
+int stepDelay=2500;
+const int sensorMin = 0;     // sensor minimum
+const int sensorMax = 1024;  // sensor maximum
+int dustPin=A2;
+float dustVal=0;
+float dustDensity = 0;
+ 
+int ledPower=12;
+int delayTime=280;
+int delayTime2=40;
+float offTime=9680;
+
+void setup() {
+ pinMode(trig,OUTPUT);
+ pinMode(echo,INPUT);
+ pinMode(mag,INPUT);
+ pinMode(ENA,OUTPUT);
+ pinMode(ENB,OUTPUT);
+ pinMode(IN1,OUTPUT);
+ pinMode(IN2,OUTPUT);
+ pinMode(IN3,OUTPUT);
+ pinMode(IN4,OUTPUT);
+ digitalWrite(ENA,HIGH);
+ digitalWrite(ENB,HIGH);
+ pinMode(ledPower,OUTPUT);
+  pinMode(4, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int i=0;
+  int ras=0;
+ // delay(50000000000);
+int sensorReading = analogRead(A0);     
+int range = map(sensorReading, sensorMin, sensorMax, 0, 3);
+  digitalWrite(trig,LOW);//0v Aa·A
+  delayMicroseconds(2);
+  digitalWrite(trig,HIGH);//5v
+  delayMicroseconds(10);
+  digitalWrite(trig,LOW);
+
+  long duration = pulseIn(echo,HIGH);
+  
+  long distance = (duration*340)/2/10000;
+  //Serial.print(distance);
+  //Serial.println("cm");
+    delay(500);
+  //if( digitalRead(mag) == HIGH )
+     // Serial.println("open");
+    //else
+     // Serial.println("close");
+      
+  delay(500);
+   if(distance<20){//접근 20cm 내 동작
+    Serial.println("come");
+    delay(500);
+        if( digitalRead(mag) == HIGH ){// 창문이 열려있을 경우
+            delay(500);
+            while(digitalRead(mag) == HIGH){//반시계 방향으로 회전
+                digitalWrite(IN1,LOW);
+               digitalWrite(IN2,HIGH);
+               digitalWrite(IN3,HIGH);
+               digitalWrite(IN4,LOW);
+               delay(5);
+              
+               digitalWrite(IN1,LOW);
+               digitalWrite(IN2,HIGH);
+               digitalWrite(IN3,LOW);
+               digitalWrite(IN4,HIGH);
+               delay(5);
+              
+               digitalWrite(IN1,HIGH);
+               digitalWrite(IN2,LOW);
+               digitalWrite(IN3,LOW);
+               digitalWrite(IN4,HIGH);
+               delay(5);
+              
+               digitalWrite(IN1,HIGH);
+               digitalWrite(IN2,LOW);
+               digitalWrite(IN3,HIGH);
+               digitalWrite(IN4,LOW);
+               delay(5);
+               
+            }
+            //digitalWrite(drPin,LOW);
+             Serial.println("close");
+              delay(500);
+         }
+         delay(500);
+  }
+   else
+   //Serial.println("safe");
+   delay(1000);
+  ////////////////////////////////////////////////////////////////////////////////////////
+  switch (range) {           
+
+ case 1:    // Sensor getting wet
+          if( digitalRead(mag) == HIGH ){//모터 동작 
+            delay(500);
+            while(digitalRead(mag) == HIGH){
+                digitalWrite(IN1,LOW);
+               digitalWrite(IN2,HIGH);
+               digitalWrite(IN3,HIGH);
+               digitalWrite(IN4,LOW);
+               delay(5);
+              
+               digitalWrite(IN1,LOW);
+               digitalWrite(IN2,HIGH);
+               digitalWrite(IN3,LOW);
+               digitalWrite(IN4,HIGH);
+               delay(5);
+              
+               digitalWrite(IN1,HIGH);
+               digitalWrite(IN2,LOW);
+               digitalWrite(IN3,LOW);
+               digitalWrite(IN4,HIGH);
+               delay(5);
+              
+               digitalWrite(IN1,HIGH);
+               digitalWrite(IN2,LOW);
+               digitalWrite(IN3,HIGH);
+               digitalWrite(IN4,LOW);
+               delay(5);
+       }     
+            //digitalWrite(drPin,LOW);//¹Y œA°e¹æCaμ¿AU
+
+             Serial.println("close");
+              delay(500);
+         }
+    break;
+ case 2:    // Sensor dry - To shut this up delete the " Serial.println("Not Raining"); " below.
+    //Serial.print(sensorReading);
+    //Serial.println("Not Raining ");
+    break;
+  }
+  ///////////////////////////////////////////dust 측정
+  digitalWrite(ledPower,LOW); // power on the LED
+  delayMicroseconds(delayTime);
+  dustVal=analogRead(dustPin); // read the dust value via pin 5 on the sensor
+  delayMicroseconds(delayTime2);
+  digitalWrite(ledPower,HIGH); // turn the LED off
+  delayMicroseconds(offTime);
+ 
+  delay(500);
+  dustDensity = 0.17*(dustVal*0.0049)-0.1;
+  Serial.println(dustDensity);
+    delay(500);
+  //////////////////////////////////////////////////////////// 라즈베리파이 시리얼 통신
+  if(Serial.available()){//python communication close operation
+  ras=Serial.read();
+        if(ras=='1'){
+          if(digitalRead(mag) == HIGH)
+  while(digitalRead(mag) == HIGH){
+                digitalWrite(IN1,LOW);
+               digitalWrite(IN2,HIGH);
+               digitalWrite(IN3,HIGH);
+               digitalWrite(IN4,LOW);
+               delay(5);
+              
+               digitalWrite(IN1,LOW);
+               digitalWrite(IN2,HIGH);
+               digitalWrite(IN3,LOW);
+               digitalWrite(IN4,HIGH);
+               delay(5);
+              
+               digitalWrite(IN1,HIGH);
+               digitalWrite(IN2,LOW);
+               digitalWrite(IN3,LOW);
+               digitalWrite(IN4,HIGH);
+               delay(5);
+              
+               digitalWrite(IN1,HIGH);
+               digitalWrite(IN2,LOW);
+               digitalWrite(IN3,HIGH);
+               digitalWrite(IN4,LOW);
+               delay(5);
+           }     
+         Serial.println("close");
+        }
+  
+  else if(ras=='0'){////python communication open operation
+  if(digitalRead(mag) == LOW)
+     while(i<150) {
+              digitalWrite(IN1,HIGH);
+               digitalWrite(IN2,LOW);
+               digitalWrite(IN3,HIGH);
+               digitalWrite(IN4,LOW);
+               delay(5);
+               
+               digitalWrite(IN1,HIGH);
+               digitalWrite(IN2,LOW);
+               digitalWrite(IN3,LOW);
+               digitalWrite(IN4,HIGH);
+               delay(5);
+               
+               digitalWrite(IN1,LOW);
+               digitalWrite(IN2,HIGH);
+               digitalWrite(IN3,LOW);
+               digitalWrite(IN4,HIGH);
+               delay(5);
+               
+               digitalWrite(IN1,LOW);
+               digitalWrite(IN2,HIGH);
+               digitalWrite(IN3,HIGH);
+               digitalWrite(IN4,LOW);
+               delay(5);
+               i++;
+               
+       }
+     Serial.println("open");
+    }
+  }
+}
