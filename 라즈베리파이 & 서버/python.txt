@@ -1,0 +1,71 @@
+// 아래 코드들은 파이썬을 이용한 각종 동작들이며 2.7.x 버전에서 구현하였다.
+
+//1.카메라 작동
+
+ 
+
+print 'hello world!'
+
+import picamera
+
+import time
+
+import os, sys
+
+ 
+
+with picamera.PiCamera() as camera:
+
+        camera.resolution=(1024, 768)
+
+        camera.capture('test2.jpg')
+
+ 
+
+//2.파이어베이스에 사진전송
+
+//유의할점(파이어베이스 스토리지를 이용하기 위해 구글 클라우드에서 보안 인증서를 다운로드 받아야한다. 반드시 인증서는 프로젝트 파일과 같은 경로에 있을것) 
+
+//인증서 다운로드 절차는 클라우드 공식 홈페이지에 자세히 나와있다.
+
+from google.cloud import storage
+
+from firebase import firebase
+
+ 
+
+firebase=firebase.FirebaseApplication('https://rasberry-e9a5c.firebaseio.com/')
+
+client=storage.Client.from_service_account_json('rasberry-a0ba34df63db.json')
+
+#bucket = list(storage_client.list_buckets())
+
+bucket = client.get_bucket('rasberry-e9a5c.appspot.com')
+
+imageBlob=bucket.blob("test/")
+
+imageBlob.upload_from_filename('/home/pi/python/camera3.jpg')
+
+print(bucket)
+
+ 
+
+//3.서버
+
+from firebase import firebase
+
+ 
+
+firebase = firebase.FirebaseApplication('https://rasberry-e9a5c.firebaseio.com/')//자신의 서버페이지를 작성
+
+ 
+
+firebase.patch('/window',{'user':'close'})#경로 데이터 갱신.
+
+state = firebase.get('/window/window',None)#경로 노드 생성. 서버 노드들을 이 명령어로 생성할 수 있다.
+
+print(state)
+
+if state == 'open':
+
+    print('success')// 작동되었는지 확인

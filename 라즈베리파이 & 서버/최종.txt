@@ -1,0 +1,166 @@
+// python 2.7.x version
+# -*- coding: utf-8 -*-
+
+print 'serial start'
+
+import serial
+
+import picamera
+
+from firebase import firebase
+
+from google.cloud import storage
+
+import time, datetime
+
+from subprocess import call #프롬프터 명령어 실행
+
+import smtplib
+
+from email.MIMEMultipart import MIMEMultipart
+
+from email.MIMEText import MIMEText
+
+from email.MIMEBase import MIMEBase
+
+from email import encoders
+
+from email.header import Header
+
+import os
+
+ 
+//웹 서버와 데이터 송.수신
+
+firebase=firebase.FirebaseApplication('https://rasberry-e9a5c.firebaseio.com/')// 웹서버 참조
+
+client=storage.Client.from_service_account_json('rasberry-a0ba34df63db.json')//서버 storage 이용하기 위한 선언
+
+bucket = client.get_bucket('rasberry-e9a5c.appspot.com')// 서버 storage 저장 버켓
+
+
+
+//아두이노와 시리얼 통신
+
+ser = serial.Serial()
+
+ser.port = '/dev/ttyUSB0' #시리얼 포트 선택
+
+ser.baudrate = 9600 #통신속도 선택
+
+ser.open() #시리얼 포트 열기
+
+ 
+
+
+def sendMail(): // SMTP를 이용하기 위한 사용자 정의 함수
+
+	sender = "rheew123@gmail.com" 
+
+	receivers = ["rheew123@gmail.com","cjfemdtlsqkqh@gmail.com"] 
+
+	subject = "라즈베리파이3 - 모션감지 자동알림!"
+
+ 
+
+	msg = MIMEMultipart()
+
+ 
+
+	msg['From'] = sender
+
+	msg['To'] = ','.join(receivers)
+
+	msg['Subject'] = Header(subject, 'utf8')
+
+	
+
+	#html태그
+
+	body = """\
+
+	<h3>접근이 감지 되었습니다.</h3>
+
+	<p>[안내] 창문 근처에 접근이 감지 되었습니다.<br>
+
+	<strong>현 상황을 확인해 주시기 바랍니다.</strong></p>
+
+	"""
+	try:
+
+			
+
+			server = smtplib.SMTP("smtp.gmail.com", 587) 
+
+			server.starttls() #secure connection
+
+			server.login(sender, "rh09170917")
+
+ 
+
+			server.sendmail(sender, receivers, msg.as_string())
+
+			print("Successfully sent email.")
+
+			server.quit()
+
+	except smtplib.SMTPException:
+
+			print ("Error: Unable to send email.")
+
+ 
+while(True): #시작. string=아두이노. state=데이터베이스.
+
+        obj = ser.readline()
+
+        string = obj[:-2].decode()
+
+        state = firebase.get('/window/window',None)#파이어베이스_경로값 불러들이기.
+
+        user = firebase.get('/window/user',None)
+
+        print(string)
+
+ 
+
+        if state != user:
+
+                if user =='close':
+
+                        ser.write('1')
+
+        
+
+        if state != user:
+
+                if user =='open':
+
+                        ser.write('0')
+
+        #if state == 'close':
+
+        #        ser.write('1') #1값을 아두이노로 보냄.
+
+        #if state == 'open':
+
+        #        ser.write('0')
+
+                
+
+        if string == 'open':// 데이터 갱신
+
+                firebase.patch('/window',{'window':'open'}) 
+
+        elif string == 'close': // 데이터 갱신
+
+                firebase.patch('/window',{'window':'close'})                
+
+        elif string == 'come': // 접근시 메일 전송
+
+                sendMail()
+
+                time.sleep(10)
+
+        else ://미세먼지 값 갱신
+
+                firebase.patch('/window',{'dust':string
